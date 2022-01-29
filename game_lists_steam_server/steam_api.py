@@ -17,5 +17,9 @@ class SteamAPI:
         return SteamID.from_url(profile_url)  # type: ignore
 
     def get_player_summaries(self, steam_id):
-        print('call get_player_summaries')
         return self.web_api.ISteamUser.GetPlayerSummaries(steamids=steam_id)
+
+    def get_app_list(self):
+        print('call get_app_list')
+        print(self.web_api.ISteamApps.GetAppList.__doc__)
+        return self.web_api.ISteamApps.GetAppList()

@@ -5,11 +5,9 @@ from flask import jsonify, abort
 import flask
 
 from game_lists_steam_server.__main__ import app
+from game_lists_steam_server.__init__ import steam_api
 from game_lists_steam_server.steam_api import SteamAPI
 from game_lists_steam_server.models import Player
-
-steam_api_key = getenv('STEAM_API_KEY', None)
-steam_api = SteamAPI(steam_api_key)
 
 
 def check_date(dt: datetime, max_delta=28):

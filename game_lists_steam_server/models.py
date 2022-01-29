@@ -31,9 +31,8 @@ class Player(BaseModel):
 
 
 class Game(BaseModel):
-    id = AutoField()
+    id = BigIntegerField(primary_key=True)
     name = TextField()
-    update_time = DateTimeField()
 
 
 class Playtime(BaseModel):
