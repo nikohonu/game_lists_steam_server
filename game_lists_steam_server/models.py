@@ -1,5 +1,7 @@
-from peewee import BigIntegerField, DateTimeField, MySQLDatabase, Model, AutoField, TextField, ForeignKeyField, IntegerField, CompositeKey
+# pyright: reportGeneralTypeIssues=false
+from peewee import BigIntegerField, BooleanField, DateTimeField, MySQLDatabase, Model, AutoField, TextField, ForeignKeyField, IntegerField, CompositeKey
 import os
+import time
 
 mariadb_password = os.getenv('MARIADB_PASSWORD', None)
 
@@ -14,7 +16,18 @@ class Player(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField(null=True)
     profile_url = TextField()
+    is_public = BooleanField(null=True)
     update_time = DateTimeField(null=True)
+
+    @property
+    def __dict__(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'profile_url': self.profile_url,
+            'is_public': self.is_public,
+            'update_time':  time.mktime(self.update_time.timetuple())
+        }
 
 
 class Game(BaseModel):
