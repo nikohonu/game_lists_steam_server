@@ -3,8 +3,7 @@ from os import getenv
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from game_lists_steam_server import views
-from game_lists_steam_server.models import Player, Game
+from game_lists_steam_server.models import Player, Game, Playtime
 from game_lists_steam_server.steam_api import SteamAPI
 
 
@@ -24,14 +23,19 @@ def get_game_list():
             print(f'updated {i} games')
 
 
-def create_table_if_not_exist(model, callback=lambda _: _):
+def create_table_if_not_exist(model, callback):
     if not model.table_exists():
         model.create_table()
         callback()
 
 
-create_table_if_not_exist(Player)
+def do_nothing():
+    pass
+
+
+create_table_if_not_exist(Player, do_nothing)
 create_table_if_not_exist(Game, get_game_list)
+create_table_if_not_exist(Playtime, do_nothing)
 sched = BackgroundScheduler(daemon=True)
 sched.add_job(get_game_list, 'interval', hours=24)
 sched.start()

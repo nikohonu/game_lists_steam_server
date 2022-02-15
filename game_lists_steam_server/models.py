@@ -1,5 +1,5 @@
 # pyright: reportGeneralTypeIssues=false
-from peewee import BigIntegerField, BooleanField, DateTimeField, MySQLDatabase, Model, AutoField, TextField, ForeignKeyField, IntegerField, CompositeKey
+from peewee import BigIntegerField, BooleanField, DateTimeField, MySQLDatabase, Model, TextField, ForeignKeyField, IntegerField, CompositeKey
 import os
 import time
 
@@ -18,15 +18,21 @@ class Player(BaseModel):
     profile_url = TextField()
     is_public = BooleanField(null=True)
     update_time = DateTimeField(null=True)
+    playtime_update_time = DateTimeField(null=True)
 
     @property
     def __dict__(self):
+        playtime_update_time = time.mktime(
+            self.playtime_update_time.timetuple()) if self.playtime_update_time else None
+        update_time = time.mktime(
+            self.update_time.timetuple()) if self.update_time else None
         return {
             'id': self.id,
             'name': self.name,
             'profile_url': self.profile_url,
             'is_public': self.is_public,
-            'update_time':  time.mktime(self.update_time.timetuple())
+            'update_time': update_time,
+            'playtime_update_time': playtime_update_time,
         }
 
 
@@ -34,12 +40,25 @@ class Game(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField()
 
+    @property
+    def __dict__(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
 
 class Playtime(BaseModel):
     player = ForeignKeyField(Player, on_delete='CASCADE')
     game = ForeignKeyField(Game, on_delete='CASCADE')
-    playtime = IntegerField()
-    update_time = DateTimeField()
+    minutes = IntegerField()
 
     class Meta:
         primary_key = CompositeKey('player', 'game')
+
+    @property
+    def __dict__(self):
+        return {
+            'game_id': self.game.id,
+            'minutes': self.minutes,
+        }
