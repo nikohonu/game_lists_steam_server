@@ -1,6 +1,7 @@
 # pyright: reportGeneralTypeIssues=false
 from steam.steamid import SteamID
 from steam.webapi import WebAPI
+from requests import get
 
 
 class SteamAPI:
@@ -20,7 +21,10 @@ class SteamAPI:
         print('call get_player_summaries')
         return self.web_api.ISteamUser.GetPlayerSummaries(steamids=steam_id)
 
-    def get_app_list(self):
-        print('call get_app_list')
-        print(self.web_api.ISteamApps.GetAppList.__doc__)
-        return self.web_api.ISteamApps.GetAppList()
+    @staticmethod
+    def get_app_details(app_id):
+        print('call get_appdetails')
+        response = get(
+            "https://store.steampowered.com/api/appdetails", params={'appids': app_id})
+        print(response.url)
+        return response.json()

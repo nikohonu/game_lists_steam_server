@@ -15,32 +15,29 @@ class BaseModel(Model):
 class Player(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField(null=True)
-    profile_url = TextField()
+    profile_url = TextField(unique=True)
     is_public = BooleanField(null=True)
-    update_time = DateTimeField(null=True)
+    is_game_details_public = BooleanField(null=True)
+    update_time = DateTimeField()
     playtime_update_time = DateTimeField(null=True)
 
     @property
     def __dict__(self):
-        playtime_update_time = time.mktime(
-            self.playtime_update_time.timetuple()) if self.playtime_update_time else None
-        update_time = time.mktime(
-            self.update_time.timetuple()) if self.update_time else None
         return {
             'id': self.id,
             'name': self.name,
             'profile_url': self.profile_url,
             'is_public': self.is_public,
-            'update_time': update_time,
-            'playtime_update_time': playtime_update_time,
+            'is_game_details_public': self.is_game_details_public,
         }
 
 
 class Game(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField()
+    update_time = DateTimeField()
 
-    @property
+    @ property
     def __dict__(self):
         return {
             'id': self.id,

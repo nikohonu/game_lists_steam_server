@@ -9,68 +9,73 @@ from game_lists_steam_server.models import Game, Player, Playtime
 exclude = [8230, 43110, 836620]
 
 
-def check_date(dt: datetime, max_delta=28):
+def check_date(dt: datetime, max_delta=1):
     if dt:
         now = datetime.now()
-        return (now-dt).days <= max_delta
+        return (now-dt).days < max_delta
     else:
         return False
-
-
-def get_player_data(id):
-    player = Player.get_or_none(Player.id == id)
-    if not player or not check_date(player.update_time):
-        players = steam_api.get_player_summaries(id)['response']['players']
-        if players:
-            player, _ = Player.get_or_create(id=id)
-            player.id = int(players[0]['steamid'])
-            player.name = players[0]['personaname']
-            player.profile_url = players[0]['profileurl']
-            player.is_public = True if players[0]['communityvisibilitystate'] == 3 else False
-            player.update_time = datetime.now()
-            player.save()
-        else:
-            return None
-    return player
 
 
 @app.route('/get-steam-id/<profile_url_id>', methods=['GET'])
 def get_steam_id(profile_url_id: str):
     profile_url = f'https://steamcommunity.com/id/{profile_url_id}/'
-    result = steam_api.get_steam_id_from_url(profile_url)
-    if result:
-        id = int(result)
-        player, _ = Player.get_or_create(
-            id=id,
-        )
-        player.profile_url = profile_url
-        player.save()
-        return jsonify(id)
+    player = Player.get_or_none(Player.profile_url == profile_url)
+    if player and check_date(player.update_time):
+        return jsonify(player.id)
     else:
-        abort(404)
+        data = steam_api.get_steam_id_from_url(profile_url)
+        if data:
+            player, _ = Player.get_or_create(id=int(data))
+            player.profile_url = profile_url
+            player.update_time = datetime.now()
+            player.save()
+            return jsonify(player.id)
+        else:
+            abort(404)
 
 
 @app.route('/get-player/<id>')
 def get_player(id: int):
-    player = get_player_data(id)
-    if player:
+    player = Player.get_or_none(Player.id == id)
+    if player and check_date(player.update_time) and player.name:
         return jsonify(player.__dict__)
     else:
-        abort(404)
+        data = steam_api.get_player_summaries(id)['response']['players']
+        if data:
+            data = data[0]
+            player, _ = Player.get_or_create(id=id)
+            player.name = data['personaname']
+            player.profile_url = data['profileurl']
+            player.is_public = True if data['communityvisibilitystate'] == 3 else False
+            player.update_time = datetime.now()
+            player.save()
+            return jsonify(player.__dict__)
+        else:
+            abort(404)
 
 
 @app.route('/get-game/<id>')
 def get_game(id: int):
     game = Game.get_or_none(Game.id == id)
-    print(game)
-    if not game:
-        abort(404)
-    return jsonify(game.__dict__)
+    if game and check_date(game.update_time):
+        return jsonify(game.__dict__)
+    else:
+        data = steam_api.get_app_details(id)
+        if data and data[id]['success']:
+            data = data[id]['data']
+            game, _ = Game.get_or_create(id=id)
+            game.name = data['name']
+            game.update_time = datetime.now()
+            game.save()
+            return jsonify(game.__dict__)
+        else:
+            abort(404)
 
 
 @app.route("/get-playtime/<id>")
 def get_playtime(id: int):
-    player = get_player_data(id)
+    player = None
     if player and player.is_public:
         if not check_date(player.playtime_update_time):
             response = steam_api.get_owned_games(id)['response']
