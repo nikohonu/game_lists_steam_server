@@ -1,7 +1,6 @@
 # pyright: reportGeneralTypeIssues=false
-from peewee import BigIntegerField, BooleanField, DateTimeField, MySQLDatabase, Model, TextField, ForeignKeyField, IntegerField, CompositeKey
+from peewee import AutoField, BigIntegerField, BooleanField, DateTimeField, FloatField, MySQLDatabase, Model, TextField, ForeignKeyField, IntegerField, CompositeKey
 import os
-import time
 
 mariadb_password = os.getenv('MARIADB_PASSWORD', None)
 
@@ -15,7 +14,7 @@ class BaseModel(Model):
 class Player(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField(null=True)
-    profile_url = TextField(unique=True)
+    profile_url = TextField(unique=True, null=True)
     is_public = BooleanField(null=True)
     is_game_details_public = BooleanField(null=True)
     update_time = DateTimeField()
@@ -35,7 +34,7 @@ class Player(BaseModel):
 class Game(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = TextField()
-    update_time = DateTimeField()
+    update_time = DateTimeField(null=True)
 
     @ property
     def __dict__(self):
@@ -43,6 +42,55 @@ class Game(BaseModel):
             'id': self.id,
             'name': self.name,
         }
+
+
+class Tag(BaseModel):
+    id = AutoField()
+    name = TextField(unique=True)
+
+    @property
+    def __dict__(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
+
+class Genre(BaseModel):
+    id = BigIntegerField(primary_key=True)
+    name = TextField(unique=True)
+
+    @ property
+    def __dict__(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
+
+class GameTag(BaseModel):
+    game = ForeignKeyField(Game, on_delete='CASCADE')
+    tag = ForeignKeyField(Tag, on_delete='CASCADE')
+    value = FloatField()
+
+    class Meta:
+        primary_key = CompositeKey('game', 'tag')
+
+    @property
+    def __dict__(self):
+        return {
+            'id': self.tag.id,
+            'name': self.tag.name,
+            'value': self.value,
+        }
+
+
+class GameGenre(BaseModel):
+    game = ForeignKeyField(Game, on_delete='CASCADE')
+    genre = ForeignKeyField(Genre, on_delete='CASCADE')
+
+    class Meta:
+        primary_key = CompositeKey('game', 'genre')
 
 
 class Playtime(BaseModel):
