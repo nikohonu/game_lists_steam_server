@@ -9,6 +9,7 @@ from game_lists_steam_server.models import Game, GameGenre, GameTag, Genre, Play
 
 
 def check_date(dt: datetime, max_delta=1):
+    dt = None if dt == '0000-00-00 00:00:00' else dt
     if dt:
         now = datetime.now()
         return (now-dt).days < max_delta
@@ -118,7 +119,7 @@ def get_playtime(id: int):
         return genetate_playtime_json(player)
     try:
         data = steam_api.get_owned_games(id)
-        if 'response' in data:
+        if 'response' in data and 'games' in data['response']:
             for g in [g for g in data['response']['games'] if g['playtime_forever'] > 0]:
                 game, _ = Game.get_or_create(id=g['appid'])
                 game.name = g['name']
