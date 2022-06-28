@@ -1,14 +1,19 @@
 # pyright: reportGeneralTypeIssues=false
-from peewee import AutoField, BigIntegerField, BooleanField, DateTimeField, FloatField, MySQLDatabase, Model, TextField, ForeignKeyField, IntegerField, CompositeKey
 import os
+from pathlib import Path
 
-mariadb_password = os.getenv('MARIADB_PASSWORD', None)
+from appdirs import user_data_dir
+from peewee import (AutoField, BigIntegerField, BooleanField, CompositeKey,
+                    DateTimeField, FloatField, ForeignKeyField, IntegerField,
+                    Model, SqliteDatabase, TextField)
+
+data_dir = Path(user_data_dir('game_lists_steam_server', 'nikohonu'))
 
 
 class BaseModel(Model):
     class Meta:
-        database = MySQLDatabase('game_lists_steam_server', user='game_lists_steam_server',
-                                 password=mariadb_password, host='localhost', port=3306)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        database = SqliteDatabase(data_dir / 'data.db')
 
 
 class Player(BaseModel):
@@ -17,7 +22,7 @@ class Player(BaseModel):
     profile_url = TextField(unique=True, null=True)
     is_public = BooleanField(null=True)
     is_game_details_public = BooleanField(null=True)
-    update_time = DateTimeField()
+    update_time = DateTimeField(null=True)
     playtime_update_time = DateTimeField(null=True)
 
     @property
@@ -96,7 +101,7 @@ class GameGenre(BaseModel):
 class Playtime(BaseModel):
     player = ForeignKeyField(Player, on_delete='CASCADE')
     game = ForeignKeyField(Game, on_delete='CASCADE')
-    minutes = IntegerField()
+    minutes = IntegerField(null=True)
 
     class Meta:
         primary_key = CompositeKey('player', 'game')

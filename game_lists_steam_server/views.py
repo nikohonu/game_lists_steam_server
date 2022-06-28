@@ -1,11 +1,12 @@
 from datetime import datetime
+
+from flask import abort, jsonify
 from requests.exceptions import HTTPError
 
-from flask import jsonify, abort
-
-from game_lists_steam_server.__main__ import app
 from game_lists_steam_server.__init__ import steam_api
-from game_lists_steam_server.models import Game, GameGenre, GameTag, Genre, Player, Playtime, Tag
+from game_lists_steam_server.__main__ import app
+from game_lists_steam_server.models import (Game, GameGenre, GameTag, Genre,
+                                            Player, Playtime, Tag)
 
 
 def check_date(dt: datetime, max_delta=1):
@@ -121,15 +122,19 @@ def get_playtime(id: int):
         data = steam_api.get_owned_games(id)
         if 'response' in data and 'games' in data['response']:
             for g in [g for g in data['response']['games'] if g['playtime_forever'] > 0]:
-                game, _ = Game.get_or_create(id=g['appid'])
+                game, _ = Game.get_or_create(id=g['appid'], name=g['name'])
                 game.name = g['name']
                 game.save()
                 playtime, _ = Playtime.get_or_create(player=player, game=game)
                 playtime.minutes = g['playtime_forever']
                 playtime.save()
             player.playtime_update_time = datetime.now()
+            player.is_game_details_public = True
             player.save()
             return genetate_playtime_json(player)
+        else:
+            player.is_game_details_public = False
+            player.save()
     except HTTPError:
         pass
     abort(404)
