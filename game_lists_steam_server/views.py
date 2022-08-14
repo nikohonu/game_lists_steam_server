@@ -1,3 +1,5 @@
+import os
+import signal
 from datetime import datetime
 
 from flask import abort, jsonify
@@ -111,6 +113,12 @@ def genetate_playtime_json(player: Player):
             'minutes': playtime.minutes,
         })
     return jsonify(result)
+
+
+@app.route('/stop')
+def stopServer():
+    os.kill(os.getpid(), signal.SIGINT)
+    return jsonify({"success": True, "message": "Server is shutting down..."})
 
 
 @app.route("/get-playtime/<id>")

@@ -1,8 +1,8 @@
 # pyright: reportGeneralTypeIssues=false
+from bs4 import BeautifulSoup
+from requests import get
 from steam.steamid import SteamID
 from steam.webapi import WebAPI
-from requests import get
-from bs4 import BeautifulSoup
 
 
 class SteamAPI:
@@ -12,7 +12,7 @@ class SteamAPI:
 
     def get_owned_games(self, steam_id):
         print('call get_owned_games')
-        return self.web_api.IPlayerService.GetOwnedGames(steamid=steam_id, appids_filter=[], include_appinfo=True, include_free_sub=True, include_played_free_games=True)
+        return self.web_api.IPlayerService.GetOwnedGames(steamid=steam_id, appids_filter=[], include_appinfo=True, include_free_sub=True, include_played_free_games=True, language='')
 
     @staticmethod
     def get_steam_id_from_url(profile_url: str):
